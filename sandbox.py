@@ -1,5 +1,5 @@
-from tkinter import *
-from tkinter import ttk
+import pygame
+import sys
 import time
 from datetime import datetime
 import mediapipe as mp
@@ -11,23 +11,17 @@ CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 500
 PARTICLE_SIZE = 5
 
-particle_map = [[0 for i in range(int(CANVAS_HEIGHT/PARTICLE_SIZE))] for j in range(int(CANVAS_WIDTH/PARTICLE_SIZE))]
-blocks_to_move = []
-
-
-
 blocks=[]
 
-class SandBlock:
-    def __init__(self, posX, posY, id_num):
+class SandBlock(pygame.sprite.Sprite):
+    def __init__(self, posX, posY):
+        pygame.sprite.Sprite.__init__(self)
         self.x = posX
         self.y = posY
-        self.id = id_num
         self.size = PARTICLE_SIZE
     
-    def updatePos(self):
-        curr_x = self.x
-        curr_y = self.y
+    def update(self):
+        screen.set_at(self.x, self.y, (0,0,0))
 
         if (self.y * self.size + self.size >= CANVAS_HEIGHT):
             return
@@ -45,22 +39,18 @@ class SandBlock:
             self.y += 1
             self.x -= 1
             particle_map[self.x][self.y] = 1
-        blocks_to_move.append((self.id, self.x-curr_x, self.y-curr_y))
 
+pygame.init()
+screen = pygame.display.set_mode((CANVAS_WIDTH, CANVAS_HEIGHT))
+pygame.display.set_caption("sandbox")
 
-root = Tk()
-root.resizable(False, False)
-root.title("sandbox")
-
-canvas = Canvas(root, width = CANVAS_WIDTH, height = CANVAS_HEIGHT, background="black")
-canvas.grid(column=0, row=0, sticky=(N, W, E, S))
-
-# new_block = SandBlock(10,5)
-# particle_map[10][5] = 1
-# blocks.append(new_block)
 
 def game_loop(q):
     while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); sys.exit();
+
         try:
             results = q.get()
             while not q.empty():
@@ -72,13 +62,11 @@ def game_loop(q):
         #draw hands
         # if not results:
         #     continue
-        
         for i in range(20):
             new_x = random.randint(0, CANVAS_WIDTH/PARTICLE_SIZE-1)
             new_y = 5
-            new_id = canvas.create_rectangle(new_x * PARTICLE_SIZE, new_y * PARTICLE_SIZE, new_x * PARTICLE_SIZE + PARTICLE_SIZE, new_y * PARTICLE_SIZE + PARTICLE_SIZE, fill="#c2b280")
 
-            new_block = SandBlock(new_x, new_y, new_id)
+            new_block = SandBlock(new_x, new_y)
             particle_map[new_x][new_y] = 1
             blocks.append(new_block)
 
@@ -119,15 +107,9 @@ def game_loop(q):
 
         for block in blocks:
             block.updatePos()
-        
-        for block in blocks_to_move:
-            canvas.move(block[0], block[1] * PARTICLE_SIZE, block[2] * PARTICLE_SIZE)
-
-        blocks_to_move.clear()
-
-        
-        canvas.update()
-
+            print(block.x)
+            pygame.draw.rect(screen, (194, 178, 128), (block.x * block.size, block.y * block.size, block.size, block.size))
+        pygame.display.update()
 
 
     root.mainloop()
