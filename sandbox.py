@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import mediapipe as mp
 import random
+import math
 
 mp_hands  = mp.solutions.hands
 
@@ -17,6 +18,14 @@ mousedown = False
 
 
 def game_loop(q):
+    class StoneBlock():
+        def __init__(self, posX, posY):
+            self.x = posX
+            self.y = posY
+
+        def update(self):
+            pass
+
     class SandBlock():
         def __init__(self, posX, posY):
             self.x = posX
@@ -57,14 +66,39 @@ def game_loop(q):
         WINDOW.blit(scaled_surface, (0, 0))
         pygame.display.flip()
 
-            
-        
-        # pygame.draw.rect(screen, (194, 178, 128), (self.x * self.size, self.y * self.size, self.size, self.size))
-
-
     def update_fps():
         fps = str(int(clock.get_fps()))
-        print(fps)
+
+    def get_line_points(x0, y0, xf, yf):
+        # 20, 20, 20, 10
+        distance = math.dist((x0,y0), (xf,yf))
+
+        dx = (xf - x0) / distance
+        dy = (yf - y0) / distance
+
+        points = []
+
+        start_x, end_x = (x0, xf)
+        start_y, end_y = (y0, yf)
+
+        for i in range(math.ceil(distance)):
+            points.append((round(start_x), round(start_y)))
+            start_x += dx
+            start_y += dy
+        
+        return points
+
+    def draw_bucket():
+        line = []
+        line += get_line_points(15, 10, 10, 15) + get_line_points(10, 15, 15, 20) + get_line_points(15, 20, 20, 15)
+
+
+        for point in line:
+            new_block = StoneBlock(point[0], point[1])
+            particle_map[point[0]][point[1]] = 1
+            blocks.append(new_block)
+
+
 
     def draw_hands(results):
         for hand_no, hand_landmarks in enumerate(results):
@@ -123,6 +157,7 @@ def game_loop(q):
                 blocks.append(new_block)
 
 
+        draw_bucket()
         render()
         update_fps()
 
