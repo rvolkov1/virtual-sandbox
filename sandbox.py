@@ -12,55 +12,143 @@ CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 500
 PARTICLE_SIZE = 5
 
-particle_map = [[0 for i in range(int(CANVAS_HEIGHT/PARTICLE_SIZE))] for j in range(int(CANVAS_WIDTH/PARTICLE_SIZE))]
-blocks=[]
+particle_map = [[None for i in range(int(CANVAS_HEIGHT/PARTICLE_SIZE))] for j in range(int(CANVAS_WIDTH/PARTICLE_SIZE))]
 mousedown = False
+
+def get_line_points(naught, final):
+    # 20, 20, 20, 10
+    distance = math.dist(naught, final)
+
+    if distance == 0: return []
+
+    dx = (final[0] - naught[0]) / distance
+    dy = (final[1] - naught[1]) / distance
+
+    points = []
+
+    start_x, end_x = (naught[0], final[0])
+    start_y, end_y = (naught[1], final[1])
+
+    for i in range(math.ceil(distance)):
+        points.append((round(start_x), round(start_y)))
+        start_x += dx
+        start_y += dy
+    
+    return points
+
+class Bucket():
+    def __init__(self):
+        self.center = (20, 20)
+        self.angle = 0
+        self.side_length = 10
+        self.vertices = ((20, 20),)
+
+    def get_vertices(self):
+        a = math.sin(self.angle) * (self.side_length / 2) 
+        b = math.cos(self.angle) * (self.side_length / 2)
+        
+        bot_left = (round(self.center[0] - b), round(self.center[1] + a))
+        bot_right = (round(self.center[0] + b), round(self.center[1] - a))
+
+        top_left = (bot_left[0] - self.side_length * math.sin(self.angle), bot_left[1] - self.side_length * math.cos(self.angle))
+        top_right = (bot_right[0] - self.side_length * math.sin(self.angle), bot_right[1] - self.side_length * math.cos(self.angle))
+
+        return top_left, bot_left, bot_right, top_right
+
+    def update(self, results):
+        if results:
+            index_x = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x
+            index_y = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y
+
+            pinky_x = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x
+            pinky_y = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y
+
+            dx = index_x - pinky_x
+            dy = index_y - pinky_y
+
+            new_angle = round(math.atan2(dy, dx), 1)
+
+            if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 ):
+                self.angle = new_angle
+
+            new_x = len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map))
+            new_y = round((pinky_y + index_y) / 2 * len(particle_map[0]))
+
+            print((new_x - self.center[0]) / self.center[0])
+
+            if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
+                self.center = (new_x, self.center[1])
+
+            if(abs((new_y - self.center[1]) / self.center[1]) > 0.05):
+                self.center = (self.center[0], new_y)
+
+
+            vertex_1, vertex_2, vertex_3, vertex_4 = self.get_vertices()
+
+            line = []
+            line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
+
+            self.vertices = line
+
+
+        for point in self.vertices:
+            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
+
+            new_block = StoneBlock(point[0], point[1])
+            particle_map[point[0]][point[1]] = new_block
+
+class StoneBlock():
+    def __init__(self, posX, posY):
+        self.x = posX
+        self.y = posY
+        self.color = (167,173,186)
+
+    def update(self):
+        pass
+
+class SandBlock():
+    def __init__(self, posX, posY):
+        self.x = posX
+        self.y = posY
+        self.color = (194, 178, 128)
+       
+    def update(self):
+        if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
+            return
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] != None ):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            particle_map[self.x][self.y] = self
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] != None and particle_map[self.x + 1][self.y] != None):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            self.x += 1
+            particle_map[self.x][self.y] = self
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] != None and particle_map[self.x - 1][self.y] != None):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            self.x -= 1
+            particle_map[self.x][self.y] = self
 
 
 def game_loop(q):
-    class StoneBlock():
-        def __init__(self, posX, posY):
-            self.x = posX
-            self.y = posY
-
-        def update(self):
-            pass
-
-    class SandBlock():
-        def __init__(self, posX, posY):
-            self.x = posX
-            self.y = posY
-        
-        def update(self):
-            if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
-                return
-            elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] <= 0 ):
-                particle_map[self.x][self.y] = -1
-                self.y += 1
-                particle_map[self.x][self.y] = 1
-            elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] <= 0 ):
-                particle_map[self.x][self.y] = -1
-                self.y += 1
-                self.x += 1
-                particle_map[self.x][self.y] = 1
-            elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] <= 0 ):
-                particle_map[self.x][self.y] = -1
-                self.y += 1
-                self.x -= 1
-                particle_map[self.x][self.y] = 1
-
     pygame.init()
     WINDOW = pygame.display.set_mode((CANVAS_WIDTH, CANVAS_HEIGHT))
     pygame.display.set_caption("sandbox")
     clock = pygame.time.Clock()
 
+    bucket = Bucket()
+
 
     def render():
         surface = pygame.Surface((CANVAS_WIDTH/PARTICLE_SIZE, CANVAS_HEIGHT/PARTICLE_SIZE))
 
-        for block in blocks:
-            surface.set_at((block.x, block.y), (194, 178, 128))
-            block.update()
+        for row, array in enumerate(particle_map):
+            for column, tile in enumerate(array):
+                if tile != None:
+                    print(column, tile)
+                    surface.set_at((row, column), tile.color)
+                    tile.update()
 
         scaled_surface = pygame.transform.scale(surface, (CANVAS_WIDTH, CANVAS_HEIGHT))
         WINDOW.blit(scaled_surface, (0, 0))
@@ -69,111 +157,7 @@ def game_loop(q):
     def update_fps():
         fps = str(int(clock.get_fps()))
 
-    def get_line_points(naught, final):
-        # 20, 20, 20, 10
-        distance = math.dist(naught, final)
-
-        if distance == 0: return []
-
-        dx = (final[0] - naught[0]) / distance
-        dy = (final[1] - naught[1]) / distance
-
-        points = []
-
-        start_x, end_x = (naught[0], final[0])
-        start_y, end_y = (naught[1], final[1])
-
-        for i in range(math.ceil(distance)):
-            points.append((round(start_x), round(start_y)))
-            start_x += dx
-            start_y += dy
-        
-        return points
-
-    def get_bucket_vertices(center, angle, side_length):
-        a = math.sin(angle) * (side_length / 2) 
-        b = math.cos(angle) * (side_length / 2)
-        
-        bot_left = (round(center[0] - b), round(center[1] + a))
-        bot_right = (round(center[0] + b), round(center[1] - a))
-
-        top_left = (bot_left[0] - side_length * math.sin(angle), bot_left[1] - side_length * math.cos(angle))
-        top_right = (bot_right[0] - side_length * math.sin(angle), bot_right[1] - side_length * math.cos(angle))
-
-        return top_left, bot_left, bot_right, top_right
-
-
-
-    def draw_bucket(results):
-        if not results: return
-
-        index_x = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x
-        index_y = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y
-
-        pinky_x = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x
-        pinky_y = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y
-
-        dx = index_x - pinky_x
-        dy = index_y - pinky_y
-
-        angle = math.atan2(dy, dx)
-
-
-        side_length = 10
-        center = (len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map)), round((pinky_y + index_y) / 2 * len(particle_map[0])))
-
-        vertex_1, vertex_2, vertex_3, vertex_4 = get_bucket_vertices(center, angle, side_length)
-
-        line = []
-        line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
-
-
-        for point in line:
-            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
-
-            new_block = StoneBlock(point[0], point[1])
-            particle_map[point[0]][point[1]] = 1
-            blocks.append(new_block)
-
-
-
-    def draw_hands(results):
-        for hand_no, hand_landmarks in enumerate(results):
-            wrist_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x * CANVAS_WIDTH
-            wrist_y = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y * CANVAS_HEIGHT
-
-            thumb_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].x * CANVAS_WIDTH
-            thumb_y = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].y * CANVAS_HEIGHT
-
-            thumb_to_index_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP].x + hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x) / 2 * CANVAS_WIDTH
-            thumb_to_index_y = (hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP].y + hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
-
-            index_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * CANVAS_WIDTH
-            index_y = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * CANVAS_HEIGHT
-
-            index_to_middle_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x) / 2 * CANVAS_WIDTH
-            index_to_middle_y = (hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
-
-            middle_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x * CANVAS_WIDTH
-            middle_y = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y * CANVAS_HEIGHT
-
-            middle_to_ring_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x) / 2 * CANVAS_WIDTH
-            middle_to_ring_y = (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
-
-            ring_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP].x * CANVAS_WIDTH
-            ring_y = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y * CANVAS_HEIGHT
-
-            ring_to_pinky_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].x) / 2 * CANVAS_WIDTH
-            ring_to_pinky_y = (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].y) / 2 * CANVAS_HEIGHT
-
-            pinky_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].x * CANVAS_WIDTH
-            pinky_y = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].y * CANVAS_HEIGHT
-
-            pygame.draw.polygon(screen, (255, 0, 0), ((wrist_x, wrist_y), (thumb_x, thumb_y), (thumb_to_index_x, thumb_to_index_y), (index_x, index_y), (index_to_middle_x, index_to_middle_y), (middle_x, middle_y), (middle_to_ring_x, middle_to_ring_y), (ring_x, ring_y), (ring_to_pinky_x, ring_to_pinky_y), (pinky_x, pinky_y)))
-
-
     while True:
-        global blocks
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -189,10 +173,9 @@ def game_loop(q):
             new_x = int(x / PARTICLE_SIZE)
             new_y = int(y / PARTICLE_SIZE)
 
-            if (particle_map[new_x][new_y] != 1):
+            if (particle_map[new_x][new_y] == None):
                 new_block = SandBlock(new_x, new_y)
-                particle_map[new_x][new_y] = 1
-                blocks.append(new_block)
+                particle_map[new_x][new_y] = new_block
 
         try:
             results = q.get()
@@ -202,20 +185,57 @@ def game_loop(q):
             print("index error")
             pass
 
-
-        draw_bucket(results)
+        bucket.update(results)
         render()
         update_fps()
 
         # remove all past hand blocks
 
-        new_blocks = []
+        for point in bucket.vertices:
+            if type(particle_map[point[0]][point[1]]).__name__ == "StoneBlock":
+                particle_map[point[0]][point[1]] = None
 
-        for block in blocks:
-            if type(block).__name__ != "StoneBlock":
-                new_blocks.append(block)
+
+            # if type(block).__name__ != "StoneBlock":
+            #     new_blocks.append(block)
+            # else:
+            #     particle_map[block.x][block.y] = 0
                 
-        blocks = new_blocks
 
 
     root.mainloop()
+
+
+# def draw_hands(results):
+#     for hand_no, hand_landmarks in enumerate(results):
+#         wrist_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x * CANVAS_WIDTH
+#         wrist_y = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y * CANVAS_HEIGHT
+
+#         thumb_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].x * CANVAS_WIDTH
+#         thumb_y = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].y * CANVAS_HEIGHT
+
+#         thumb_to_index_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP].x + hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x) / 2 * CANVAS_WIDTH
+#         thumb_to_index_y = (hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP].y + hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
+
+#         index_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * CANVAS_WIDTH
+#         index_y = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * CANVAS_HEIGHT
+
+#         index_to_middle_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x) / 2 * CANVAS_WIDTH
+#         index_to_middle_y = (hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
+
+#         middle_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x * CANVAS_WIDTH
+#         middle_y = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y * CANVAS_HEIGHT
+
+#         middle_to_ring_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].x) / 2 * CANVAS_WIDTH
+#         middle_to_ring_y = (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP].y) / 2 * CANVAS_HEIGHT
+
+#         ring_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP].x * CANVAS_WIDTH
+#         ring_y = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y * CANVAS_HEIGHT
+
+#         ring_to_pinky_x = CANVAS_WIDTH - (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].x + hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].x) / 2 * CANVAS_WIDTH
+#         ring_to_pinky_y = (hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_MCP].y + hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].y) / 2 * CANVAS_HEIGHT
+
+#         pinky_x = CANVAS_WIDTH - hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].x * CANVAS_WIDTH
+#         pinky_y = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].y * CANVAS_HEIGHT
+
+#         pygame.draw.polygon(screen, (255, 0, 0), ((wrist_x, wrist_y), (thumb_x, thumb_y), (thumb_to_index_x, thumb_to_index_y), (index_x, index_y), (index_to_middle_x, index_to_middle_y), (middle_x, middle_y), (middle_to_ring_x, middle_to_ring_y), (ring_x, ring_y), (ring_to_pinky_x, ring_to_pinky_y), (pinky_x, pinky_y)))
