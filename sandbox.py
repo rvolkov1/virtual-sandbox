@@ -105,10 +105,22 @@ def game_loop(q):
 
 
     def draw_bucket(results):
-        print (results)
+        if not results: return
+
+        index_x = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x
+        index_y = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y
+
+        pinky_x = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x
+        pinky_y = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y
+
+        dx = index_x - pinky_x
+        dy = index_y - pinky_y
+
+        angle = math.atan2(dy, dx)
+
+
         side_length = 10
-        center = (20, 20)
-        angle = 0
+        center = (len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map)), round((pinky_y + index_y) / 2 * len(particle_map[0])))
 
         vertex_1, vertex_2, vertex_3, vertex_4 = get_bucket_vertices(center, angle, side_length)
 
@@ -117,6 +129,8 @@ def game_loop(q):
 
 
         for point in line:
+            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
+
             new_block = StoneBlock(point[0], point[1])
             particle_map[point[0]][point[1]] = 1
             blocks.append(new_block)
@@ -159,6 +173,7 @@ def game_loop(q):
 
 
     while True:
+        global blocks
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -179,11 +194,28 @@ def game_loop(q):
                 particle_map[new_x][new_y] = 1
                 blocks.append(new_block)
 
+        try:
+            results = q.get()
+            while not q.empty():
+                results = q.get()
+        except IndexError:
+            print("index error")
+            pass
+
 
         draw_bucket(results)
         render()
         update_fps()
 
+        # remove all past hand blocks
+
+        new_blocks = []
+
+        for block in blocks:
+            if type(block).__name__ != "StoneBlock":
+                new_blocks.append(block)
+                
+        blocks = new_blocks
 
 
     root.mainloop()
