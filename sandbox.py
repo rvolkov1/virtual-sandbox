@@ -74,6 +74,10 @@ class Bucket():
             new_x = len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map))
             new_y = round((pinky_y + index_y) / 2 * len(particle_map[0]))
 
+            new_x = new_x if new_x != 0 else 1
+            new_y = new_y if new_y != 0 else 1
+
+
             if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
                 self.center = (new_x, self.center[1])
 
@@ -189,6 +193,8 @@ def game_loop(q):
         # remove all past hand blocks
 
         for point in bucket.vertices:
+            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
+
             if type(particle_map[point[0]][point[1]]).__name__ == "StoneBlock":
                 particle_map[point[0]][point[1]] = None
 
