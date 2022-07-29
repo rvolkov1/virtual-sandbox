@@ -71,11 +71,20 @@ class Bucket():
             if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 ):
                 self.angle = new_angle
 
-            new_x = len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map))
-            new_y = round((pinky_y + index_y) / 2 * len(particle_map[0]))
+            buffer = 1/10
 
-            new_x = new_x if new_x != 0 else 1
-            new_y = new_y if new_y != 0 else 1
+            new_x = len(particle_map) - round(((pinky_x + index_x) - buffer) * len(particle_map))
+            new_y = round(((pinky_y + index_y)- buffer) * len(particle_map[0]))
+
+            if new_x <= 0: 
+                new_x = 1
+            elif new_x > len(particle_map):
+                new_x = len(particle_map) - 1
+
+            if new_y <= 0: 
+                new_y = 1
+            elif new_y > len(particle_map[0]):
+                new_y = len(particle_map[0]) - 1
 
 
             if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
@@ -196,15 +205,7 @@ def game_loop(q):
             if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
 
             if type(particle_map[point[0]][point[1]]).__name__ == "StoneBlock":
-                particle_map[point[0]][point[1]] = None
-
-
-            # if type(block).__name__ != "StoneBlock":
-            #     new_blocks.append(block)
-            # else:
-            #     particle_map[block.x][block.y] = 0
-                
-
+                particle_map[point[0]][point[1]] = None                
 
     root.mainloop()
 
