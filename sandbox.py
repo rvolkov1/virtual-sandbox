@@ -30,7 +30,7 @@ def get_line_points(naught, final):
     start_y, end_y = (naught[1], final[1])
 
     for i in range(math.ceil(distance)):
-        points.append((round(start_x), round(start_y)))
+        points.append((math.floor(start_x), math.floor(start_y)))
         start_x += dx
         start_y += dy
     
