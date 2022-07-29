@@ -69,17 +69,19 @@ def game_loop(q):
     def update_fps():
         fps = str(int(clock.get_fps()))
 
-    def get_line_points(x0, y0, xf, yf):
+    def get_line_points(naught, final):
         # 20, 20, 20, 10
-        distance = math.dist((x0,y0), (xf,yf))
+        distance = math.dist(naught, final)
 
-        dx = (xf - x0) / distance
-        dy = (yf - y0) / distance
+        if distance == 0: return []
+
+        dx = (final[0] - naught[0]) / distance
+        dy = (final[1] - naught[1]) / distance
 
         points = []
 
-        start_x, end_x = (x0, xf)
-        start_y, end_y = (y0, yf)
+        start_x, end_x = (naught[0], final[0])
+        start_y, end_y = (naught[1], final[1])
 
         for i in range(math.ceil(distance)):
             points.append((round(start_x), round(start_y)))
@@ -88,9 +90,30 @@ def game_loop(q):
         
         return points
 
-    def draw_bucket():
+    def get_bucket_vertices(center, angle, side_length):
+        a = math.sin(angle) * (side_length / 2) 
+        b = math.cos(angle) * (side_length / 2)
+        
+        bot_left = (round(center[0] - b), round(center[1] + a))
+        bot_right = (round(center[0] + b), round(center[1] - a))
+
+        top_left = (bot_left[0] - side_length * math.sin(angle), bot_left[1] - side_length * math.cos(angle))
+        top_right = (bot_right[0] - side_length * math.sin(angle), bot_right[1] - side_length * math.cos(angle))
+
+        return top_left, bot_left, bot_right, top_right
+
+
+
+    def draw_bucket(results):
+        print (results)
+        side_length = 10
+        center = (20, 20)
+        angle = 0
+
+        vertex_1, vertex_2, vertex_3, vertex_4 = get_bucket_vertices(center, angle, side_length)
+
         line = []
-        line += get_line_points(15, 10, 10, 15) + get_line_points(10, 15, 15, 20) + get_line_points(15, 20, 20, 15)
+        line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
 
 
         for point in line:
@@ -157,7 +180,7 @@ def game_loop(q):
                 blocks.append(new_block)
 
 
-        draw_bucket()
+        draw_bucket(results)
         render()
         update_fps()
 
