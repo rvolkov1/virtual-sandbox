@@ -44,7 +44,7 @@ class Bucket():
         self.center = (20, 20)
         self.angle = 0
         self.side_length = 10
-        self.vertices = ((20, 20),)
+        self.vertices = ((-1, -1),)
 
     def get_vertices(self):
         a = math.sin(self.angle) * (self.side_length / 2) 
@@ -59,15 +59,21 @@ class Bucket():
         return top_left, bot_left, bot_right, top_right
 
     def update(self, results):
-        if results:
-            index_x = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x
-            index_y = results[0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y
+        if results[0]:
+            handedness_index = results[1][0].classification[0].index
 
-            pinky_x = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].x
-            pinky_y = results[0].landmark[mp_hands.HandLandmark.PINKY_MCP].y
+            index_x = results[0][0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x
+            index_y = results[0][0].landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y
 
-            dx = index_x - pinky_x
-            dy = index_y - pinky_y
+            pinky_x = results[0][0].landmark[mp_hands.HandLandmark.PINKY_MCP].x
+            pinky_y = results[0][0].landmark[mp_hands.HandLandmark.PINKY_MCP].y
+
+            if (handedness_index == 0):
+                dx = index_x - pinky_x
+                dy = index_y - pinky_y
+            else: 
+                dx = pinky_x - index_x
+                dy = pinky_y - index_y
 
             new_angle = round(math.atan2(dy, dx), 1)
 

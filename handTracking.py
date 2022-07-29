@@ -29,7 +29,7 @@ def trackHands(q):
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-            q.put(results.multi_hand_landmarks)
+            q.put((results.multi_hand_landmarks, results.multi_handedness))
 
             # if results.multi_hand_landmarks:
             #     for hand_no, hand_landmarks in enumerate(results.multi_hand_landmarks):
