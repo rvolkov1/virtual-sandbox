@@ -74,8 +74,6 @@ class Bucket():
             new_x = len(particle_map) - round((pinky_x + index_x) / 2 * len(particle_map))
             new_y = round((pinky_y + index_y) / 2 * len(particle_map[0]))
 
-            print((new_x - self.center[0]) / self.center[0])
-
             if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
                 self.center = (new_x, self.center[1])
 
@@ -115,16 +113,16 @@ class SandBlock():
     def update(self):
         if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
             return
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] != None ):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] == None ):
             particle_map[self.x][self.y] = None
             self.y += 1
             particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] != None and particle_map[self.x + 1][self.y] != None):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None):
             particle_map[self.x][self.y] = None
             self.y += 1
             self.x += 1
             particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] != None and particle_map[self.x - 1][self.y] != None):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None):
             particle_map[self.x][self.y] = None
             self.y += 1
             self.x -= 1
@@ -143,10 +141,9 @@ def game_loop(q):
     def render():
         surface = pygame.Surface((CANVAS_WIDTH/PARTICLE_SIZE, CANVAS_HEIGHT/PARTICLE_SIZE))
 
-        for row, array in enumerate(particle_map):
-            for column, tile in enumerate(array):
+        for row, array in reversed(list(enumerate(particle_map))):
+            for column, tile in reversed(list(enumerate(array))):
                 if tile != None:
-                    print(column, tile)
                     surface.set_at((row, column), tile.color)
                     tile.update()
 
