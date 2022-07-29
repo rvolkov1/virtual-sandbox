@@ -12,7 +12,10 @@ CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 500
 PARTICLE_SIZE = 5
 
-particle_map = [[None for i in range(int(CANVAS_HEIGHT/PARTICLE_SIZE))] for j in range(int(CANVAS_WIDTH/PARTICLE_SIZE))]
+GRID_HEIGHT = int(CANVAS_HEIGHT/PARTICLE_SIZE)
+GRID_WIDTH = int(CANVAS_WIDTH/PARTICLE_SIZE)
+
+particle_map = [[None for i in range(GRID_HEIGHT)] for j in range(GRID_WIDTH)]
 mousedown = False
 
 def get_line_points(naught, final):
@@ -73,18 +76,18 @@ class Bucket():
 
             buffer = 1/10
 
-            new_x = len(particle_map) - round(((pinky_x + index_x) - buffer) * len(particle_map))
-            new_y = round(((pinky_y + index_y)- buffer) * len(particle_map[0]))
+            new_x = GRID_WIDTH - round(((pinky_x + index_x) - buffer) * GRID_WIDTH)
+            new_y = round(((pinky_y + index_y)- buffer) * GRID_HEIGHT)
 
             if new_x <= 0: 
                 new_x = 1
-            elif new_x > len(particle_map):
-                new_x = len(particle_map) - 1
+            elif new_x > GRID_WIDTH:
+                new_x = GRID_WIDTH - 1
 
             if new_y <= 0: 
                 new_y = 1
-            elif new_y > len(particle_map[0]):
-                new_y = len(particle_map[0]) - 1
+            elif new_y > GRID_HEIGHT:
+                new_y = GRID_HEIGHT - 1
 
 
             if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
@@ -103,7 +106,7 @@ class Bucket():
 
 
         for point in self.vertices:
-            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
+            if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
 
             new_block = StoneBlock(point[0], point[1])
             particle_map[point[0]][point[1]] = new_block
@@ -202,7 +205,7 @@ def game_loop(q):
         # remove all past hand blocks
 
         for point in bucket.vertices:
-            if (point[0] < 0 or point[0] > len(particle_map)-1 or point[1] < 0 or point[1] > len(particle_map[0]) -1): continue
+            if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
 
             if type(particle_map[point[0]][point[1]]).__name__ == "StoneBlock":
                 particle_map[point[0]][point[1]] = None                
