@@ -39,6 +39,29 @@ def get_line_points(naught, final):
     
     return points
 
+def resolve_forces(point, fx, fy):
+    if (fx == fy == 0): return
+
+    x = point[0]
+    y = point[1]
+
+    while (particle_map[x][y] != None):
+        if (x + fx <= 0 or x + fx >= GRID_WIDTH - 1):
+            if (y > 1):
+                y -= 1
+            else:
+                y += 1
+        elif (y + fy >= GRID_HEIGHT - 1 or y + fy <= 0):
+            if (x > 1):
+                x -= 1
+            else:
+                x += 1
+        else:
+            x += fx
+            y += fy
+            
+    particle_map[x][y] = SandBlock(x, y)
+
 class Bucket():
     def __init__(self):
         self.center = (20, 20)
@@ -95,6 +118,7 @@ class Bucket():
             elif new_y > GRID_HEIGHT:
                 new_y = GRID_HEIGHT - 1
 
+            old_point = self.center
 
             if(abs((new_x - self.center[0]) / self.center[0]) > 0.05):
                 self.center = (new_x, self.center[1])
@@ -110,9 +134,20 @@ class Bucket():
 
             self.vertices = line
 
-
-        for point in self.vertices:
+        for index, point in enumerate(self.vertices):
             if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
+            if (type(particle_map[point[0]][point[1]]).__name__ == "SandBlock"):
+                fx = 0
+                fy = 0
+
+                dx = new_x - old_point[0]
+                dy = new_y - old_point[1]
+
+                sign = lambda x: x and (1, -1)[x<0]
+
+                print(sign(dx))
+
+                resolve_forces(point, sign(dx), 0)
 
             new_block = StoneBlock(point[0], point[1])
             particle_map[point[0]][point[1]] = new_block
