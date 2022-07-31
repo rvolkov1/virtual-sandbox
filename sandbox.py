@@ -46,17 +46,20 @@ def resolve_forces(point, fx, fy):
     y = point[1]
 
     while (particle_map[x][y] != None):
-        if (x + fx <= 0 or x + fx >= GRID_WIDTH - 1):
+        if (x + fx <= 0 or x + fx >= GRID_WIDTH):
+            print('maybe')
             if (y > 1):
                 y -= 1
             else:
                 y += 1
-        elif (y + fy >= GRID_HEIGHT - 1 or y + fy <= 0):
+        elif (y + fy >= GRID_HEIGHT or y + fy <= 0):
+            print('no')
             if (x > 1):
                 x -= 1
             else:
                 x += 1
         else:
+            print('yes')
             x += fx
             y += fy
             
@@ -145,8 +148,6 @@ class Bucket():
 
                 sign = lambda x: x and (1, -1)[x<0]
 
-                print(sign(dx))
-
                 resolve_forces(point, sign(dx), 0)
 
             new_block = StoneBlock(point[0], point[1])
@@ -170,7 +171,7 @@ class SandBlock():
     def update(self):
         if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
             return
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] == None ):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] == None):
             particle_map[self.x][self.y] = None
             self.y += 1
             particle_map[self.x][self.y] = self
@@ -185,6 +186,39 @@ class SandBlock():
             self.x -= 1
             particle_map[self.x][self.y] = self
 
+        return (self.x, self.y)
+
+
+class WaterBlock():
+    def __init__(self, posX, posY):
+        self.x = posX
+        self.y = posY
+        self.dx = 0
+        self.color = (156, 211, 219)
+
+    def update(self):
+        if (self.y < GRID_HEIGHT-1 and particle_map[self.x][self.y + 1] == None):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            particle_map[self.x][self.y] = self
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            self.x += 1
+            particle_map[self.x][self.y] = self
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None):
+            particle_map[self.x][self.y] = None
+            self.y += 1
+            self.x -= 1
+            particle_map[self.x][self.y] = self
+        elif (self.dx == 0):
+            self.dx = 1 if random.random() > 0.5 else -1
+        elif (self.x + self.dx < GRID_WIDTH-1 and self.x + self.dx > 0 and particle_map[self.x + self.dx][self.y] == None):
+            particle_map[self.x][self.y] = None
+            self.x += self.dx
+            particle_map[self.x][self.y] = self
+
+        return (self.x, self.y)
 
 def game_loop(q):
     pygame.init()
@@ -198,11 +232,15 @@ def game_loop(q):
     def render():
         surface = pygame.Surface((CANVAS_WIDTH/PARTICLE_SIZE, CANVAS_HEIGHT/PARTICLE_SIZE))
 
+        # record tiles that have been updated
+        updated_tiles = {}
+
         for row, array in reversed(list(enumerate(particle_map))):
             for column, tile in reversed(list(enumerate(array))):
-                if tile != None:
+                if tile != None and (row, column) not in updated_tiles:
                     surface.set_at((row, column), tile.color)
-                    tile.update()
+                    updated_tile = tile.update()
+                    updated_tiles[updated_tile] = True
 
         scaled_surface = pygame.transform.scale(surface, (CANVAS_WIDTH, CANVAS_HEIGHT))
         WINDOW.blit(scaled_surface, (0, 0))
@@ -228,7 +266,7 @@ def game_loop(q):
             new_y = int(y / PARTICLE_SIZE)
 
             if (particle_map[new_x][new_y] == None):
-                new_block = SandBlock(new_x, new_y)
+                new_block = WaterBlock(new_x, new_y)
                 particle_map[new_x][new_y] = new_block
 
         try:
