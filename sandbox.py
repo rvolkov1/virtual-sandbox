@@ -39,7 +39,7 @@ def get_line_points(naught, final):
     
     return points
 
-def resolve_forces(point, fx, fy):
+def resolve_forces(point, block_type, fx, fy):
     if (fx == fy == 0): return
 
     x = point[0]
@@ -47,23 +47,20 @@ def resolve_forces(point, fx, fy):
 
     while (particle_map[x][y] != None):
         if (x + fx <= 0 or x + fx >= GRID_WIDTH):
-            print('maybe')
             if (y > 1):
                 y -= 1
             else:
                 y += 1
         elif (y + fy >= GRID_HEIGHT or y + fy <= 0):
-            print('no')
             if (x > 1):
                 x -= 1
             else:
                 x += 1
         else:
-            print('yes')
             x += fx
             y += fy
             
-    particle_map[x][y] = SandBlock(x, y)
+    particle_map[x][y] = SandBlock(x, y) if block_type == "sand" else WaterBlock(x, y)
 
 class Bucket():
     def __init__(self):
@@ -137,24 +134,26 @@ class Bucket():
 
             self.vertices = line
 
-        for index, point in enumerate(self.vertices):
-            if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
-            if (type(particle_map[point[0]][point[1]]).__name__ == "SandBlock"):
-                fx = 0
-                fy = 0
+            for index, point in enumerate(self.vertices):
+                if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
+                block_type = type(particle_map[point[0]][point[1]]).__name__
 
-                dx = new_x - old_point[0]
-                dy = new_y - old_point[1]
+                if (block_type != "StoneBlock"):
+                    fx = 0
+                    fy = 0
 
-                sign = lambda x: x and (1, -1)[x<0]
+                    dx = new_x - old_point[0]
+                    dy = new_y - old_point[1]
 
-                resolve_forces(point, sign(dx), 0)
+                    sign = lambda x: x and (1, -1)[x<0]
 
-            new_block = StoneBlock(point[0], point[1])
-            particle_map[point[0]][point[1]] = new_block
+                    resolve_forces(point, block_type, sign(dx), 0)
+
+                new_block = StoneBlock(point[0], point[1])
+                particle_map[point[0]][point[1]] = new_block
 
 class StoneBlock():
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY): 
         self.x = posX
         self.y = posY
         self.color = (167,173,186)
@@ -201,22 +200,38 @@ class WaterBlock():
             particle_map[self.x][self.y] = None
             self.y += 1
             particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None):
-            particle_map[self.x][self.y] = None
-            self.y += 1
-            self.x += 1
-            particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None):
-            particle_map[self.x][self.y] = None
-            self.y += 1
-            self.x -= 1
-            particle_map[self.x][self.y] = self
-        elif (self.dx == 0):
-            self.dx = 1 if random.random() > 0.5 else -1
+            return (self.x, self.y)
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1):
+
+            # and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None   
+            # and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None 
+
+            i = 1
+            while (i <= 8):
+                if (self.x + i < GRID_WIDTH and self.y + 1 < GRID_HEIGHT and particle_map[self.x + i][self.y + 1] == None):
+                    particle_map[self.x][self.y] = None
+                    self.y += 1
+                    self.x += i
+                    particle_map[self.x][self.y] = self
+                    return (self.x, self.y)
+                elif (self.x - i > 0 and self.y + 1 < GRID_HEIGHT and particle_map[self.x - i][self.y + 1] == None):
+                    particle_map[self.x][self.y] = None
+                    self.y += 1
+                    self.x -= i
+                    particle_map[self.x][self.y] = self
+                    return (self.x, self.y)
+
+                i += 1
+
+        
+        if (self.dx == 0):
+            self.dx = -1
+            # self.dx = 1 if random.random() > 0.5 else -1
         elif (self.x + self.dx < GRID_WIDTH-1 and self.x + self.dx > 0 and particle_map[self.x + self.dx][self.y] == None):
             particle_map[self.x][self.y] = None
             self.x += self.dx
             particle_map[self.x][self.y] = self
+        else: self.dx *= -1
 
         return (self.x, self.y)
 
