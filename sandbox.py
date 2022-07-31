@@ -193,6 +193,7 @@ class WaterBlock():
         self.x = posX
         self.y = posY
         self.dx = 0
+        self.density = 8
         self.color = (156, 211, 219)
 
     def update(self):
@@ -206,8 +207,7 @@ class WaterBlock():
             # and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None   
             # and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None 
 
-            i = 1
-            while (i <= 8):
+            for i in range(1, self.density + 1)
                 if (self.x + i < GRID_WIDTH and self.y + 1 < GRID_HEIGHT and particle_map[self.x + i][self.y + 1] == None):
                     particle_map[self.x][self.y] = None
                     self.y += 1
@@ -220,9 +220,6 @@ class WaterBlock():
                     self.x -= i
                     particle_map[self.x][self.y] = self
                     return (self.x, self.y)
-
-                i += 1
-
         
         if (self.dx == 0):
             self.dx = -1
