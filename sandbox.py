@@ -18,6 +18,9 @@ GRID_WIDTH = int(CANVAS_WIDTH/PARTICLE_SIZE)
 particle_map = [[None for i in range(GRID_HEIGHT)] for j in range(GRID_WIDTH)]
 mousedown = False
 
+# 0 - sand, 1 - water
+curr_block_type = 0
+
 def get_line_points(naught, final):
     # 20, 20, 20, 10
     distance = math.dist(naught, final)
@@ -282,6 +285,9 @@ def game_loop(q):
             if (particle_map[new_x][new_y] == None):
                 new_block = WaterBlock(new_x, new_y)
                 particle_map[new_x][new_y] = new_block
+
+        if pygame.key.get_pressed()[pygame.K_0]:
+            print("zero pressed")
 
         try:
             results = q.get()
