@@ -203,11 +203,7 @@ class WaterBlock():
             particle_map[self.x][self.y] = self
             return (self.x, self.y)
         elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1):
-
-            # and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None   
-            # and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None 
-
-            for i in range(1, self.density + 1)
+            for i in range(1, self.density + 1):
                 if (self.x + i < GRID_WIDTH and self.y + 1 < GRID_HEIGHT and particle_map[self.x + i][self.y + 1] == None):
                     particle_map[self.x][self.y] = None
                     self.y += 1
