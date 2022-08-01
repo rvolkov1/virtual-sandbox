@@ -267,8 +267,8 @@ class WaterBlock():
                     return (self.x, self.y)
         
         if (self.dx == 0):
-            # self.dx = -1
-            self.dx = 1 if random.random() > 0.5 else -1
+            self.dx = -1
+            # self.dx = 1 if random.random() > 0.5 else -1
         elif (self.x + self.dx < GRID_WIDTH-1 and self.x + self.dx > 0 and particle_map[self.x + self.dx][self.y] == None):
             particle_map[self.x][self.y] = None
             self.x += self.dx
