@@ -59,7 +59,7 @@ def resolve_forces(point, block_type, fx, fy):
             x += fx
             y += fy
             
-    particle_map[x][y] = SandBlock(x, y) if block_type == "sand" else WaterBlock(x, y)
+    particle_map[x][y] = SandBlock(x, y) if block_type == "SandBlock" else WaterBlock(x, y)
 
 class UserInput():
     def __init__(self):
@@ -176,6 +176,7 @@ class Bucket():
             for index, point in enumerate(self.vertices):
                 if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
                 block_type = type(particle_map[point[0]][point[1]]).__name__
+                print(block_type)
 
                 if (block_type != "StoneBlock"):
                     fx = 0
