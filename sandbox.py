@@ -16,16 +16,12 @@ GRID_HEIGHT = int(CANVAS_HEIGHT/PARTICLE_SIZE)
 GRID_WIDTH = int(CANVAS_WIDTH/PARTICLE_SIZE)
 
 particle_map = [[None for i in range(GRID_HEIGHT)] for j in range(GRID_WIDTH)]
-mousedown = False
-
-# 0 - sand, 1 - water
-curr_block_type = 0
 
 def get_line_points(naught, final):
     # 20, 20, 20, 10
     distance = math.dist(naught, final)
 
-    if distance == 0: return []
+    if distance == 0: return [final]
 
     dx = (final[0] - naught[0]) / distance
     dy = (final[1] - naught[1]) / distance
@@ -64,6 +60,46 @@ def resolve_forces(point, block_type, fx, fy):
             y += fy
             
     particle_map[x][y] = SandBlock(x, y) if block_type == "sand" else WaterBlock(x, y)
+
+class UserInput():
+    def __init__(self):
+        self.prev_mouse_point = None
+        # 1 - sand, 2 - water, 3 - stone
+        self.curr_block_type = 1
+
+    def update_block_type(self):
+        if pygame.key.get_pressed()[pygame.K_1]:
+            self.curr_block_type = 1
+        elif pygame.key.get_pressed()[pygame.K_2]:
+            self.curr_block_type = 2
+        elif pygame.key.get_pressed()[pygame.K_3]:
+            self.curr_block_type = 3
+    
+    def update_mouse_pos(self):
+        if pygame.mouse.get_pressed()[0]:
+            x, y = pygame.mouse.get_pos()
+            
+            new_point = (int(x / PARTICLE_SIZE), int(y / PARTICLE_SIZE))
+            points = [new_point]
+
+            if (self.prev_mouse_point != None):
+                points = get_line_points(self.prev_mouse_point, new_point)
+
+            for point in points:
+                if (particle_map[point[0]][point[1]] == None):
+                    if (self.curr_block_type == 1):
+                        new_block = SandBlock(point[0], point[1])
+                    elif (self.curr_block_type == 2):
+                        new_block = WaterBlock(point[0], point[1])
+                    elif (self.curr_block_type == 3):
+                        new_block = StoneBlock(point[0], point[1])
+
+                    particle_map[point[0]][point[1]] = new_block
+            
+            self.prev_mouse_point = new_point
+        else:
+            self.prev_mouse_point = None
+
 
 class Bucket():
     def __init__(self):
@@ -243,6 +279,7 @@ def game_loop(q):
     pygame.display.set_caption("sandbox")
     clock = pygame.time.Clock()
 
+    player_input = UserInput();
     bucket = Bucket()
 
 
@@ -271,23 +308,6 @@ def game_loop(q):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit(); sys.exit();
-            if pygame.mouse.get_pressed()[0]:
-                mousedown = True
-            else:
-                mousedown = False
-
-        if mousedown:
-            x, y = pygame.mouse.get_pos()
-            
-            new_x = int(x / PARTICLE_SIZE)
-            new_y = int(y / PARTICLE_SIZE)
-
-            if (particle_map[new_x][new_y] == None):
-                new_block = WaterBlock(new_x, new_y)
-                particle_map[new_x][new_y] = new_block
-
-        if pygame.key.get_pressed()[pygame.K_0]:
-            print("zero pressed")
 
         try:
             results = q.get()
@@ -296,6 +316,9 @@ def game_loop(q):
         except IndexError:
             print("index error")
             pass
+
+        player_input.update_block_type()
+        player_input.update_mouse_pos()
 
         bucket.update(results)
         render()
