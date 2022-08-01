@@ -197,6 +197,7 @@ class StoneBlock():
         self.x = posX
         self.y = posY
         self.color = (167,173,186)
+        self.density = 10
 
     def update(self):
         pass
@@ -206,6 +207,7 @@ class SandBlock():
         self.x = posX
         self.y = posY
         self.color = (194, 178, 128)
+        self.density = 1
        
     def update(self):
         if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
@@ -233,7 +235,8 @@ class WaterBlock():
         self.x = posX
         self.y = posY
         self.dx = 0
-        self.density = 2
+        self.density = 0.2
+        self.friction = 8
         self.color = (156, 211, 219)
 
     def update(self):
@@ -243,7 +246,7 @@ class WaterBlock():
             particle_map[self.x][self.y] = self
             return (self.x, self.y)
         elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1):
-            for i in range(1, self.density + 1):
+            for i in range(1, self.friction + 1):
                 if (self.x + i < GRID_WIDTH - 1 and self.y < GRID_HEIGHT-1 and particle_map[self.x + i][self.y] != None):
                     break
                 if (self.x + i < GRID_WIDTH-1 and self.y + 1 < GRID_HEIGHT-1 and particle_map[self.x + i][self.y + 1] == None):
@@ -253,7 +256,7 @@ class WaterBlock():
                     particle_map[self.x][self.y] = self
                     return (self.x, self.y)
             
-            for i in range(1, self.density+1):
+            for i in range(1, self.friction+1):
                 if (self.x - i > 0 and self.y < GRID_HEIGHT-1 and particle_map[self.x - i][self.y] != None):
                     break
                 elif (self.x - i > 0 and self.y + 1 < GRID_HEIGHT-1 and particle_map[self.x - i][self.y + 1] == None):
@@ -280,7 +283,7 @@ def game_loop(q):
     pygame.display.set_caption("sandbox")
     clock = pygame.time.Clock()
 
-    player_input = UserInput();
+    player_input = UserInput()
     bucket = Bucket()
 
 
