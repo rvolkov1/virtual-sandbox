@@ -40,7 +40,6 @@ def get_line_points(naught, final):
 
 def resolve_forces(point, block_type, fx, fy):
     if (fx == fy == 0): return
-
     x = point[0]
     y = point[1]
 
@@ -106,7 +105,7 @@ class Bucket():
         self.center = (20, 20)
         self.angle = 0
         self.side_length = 10
-        self.vertices = ((-1, -1),)
+        self.vertices = None
 
     def get_vertices(self):
         a = math.sin(self.angle) * (self.side_length / 2) 
@@ -171,25 +170,35 @@ class Bucket():
             line = []
             line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
 
-            new_vertices = line
+            new_vertices = line[:29]
 
-            for index, point in enumerate(new_vertices):
-                if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
-                block_type = type(particle_map[point[0]][point[1]]).__name__
 
-                if (block_type != "StoneBlock" and block_type != "BucketBlock" and block_type != None):
-                    fx = 0
-                    fy = 0
+            for index, endpoint in enumerate(new_vertices):
+                if (self.vertices != None):
+                    startpoint = self.vertices[index]
+                    point_line = get_line_points(endpoint, startpoint)
+                else:
+                    point_line = [endpoint]
 
-                    dx = new_x - old_point[0]
-                    dy = new_y - old_point[1]
+                for i, point in enumerate(point_line):
+                    if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
+                    block_type = type(particle_map[point[0]][point[1]]).__name__
 
-                    sign = lambda x: x and (1, -1)[x<0]
+                    if (block_type != "StoneBlock" and block_type != "BucketBlock" and block_type != "NoneType"):
+                        fx = 0
+                        fy = 0
 
-                    resolve_forces(point, block_type, sign(dx), 0)
+                        dx = new_x - old_point[0]
+                        dy = new_y - old_point[1]
 
-                    new_block = BucketBlock(point[0], point[1])
-                    particle_map[point[0]][point[1]] = new_block
+                        sign = lambda x: x and (1, -1)[x<0]
+
+                        resolve_forces(point, block_type, sign(dx), 0)
+
+                    
+                    if (i == 0):
+                        new_block = BucketBlock(point[0], point[1])
+                        particle_map[point[0]][point[1]] = new_block
             
             self.vertices = new_vertices
 
@@ -207,7 +216,7 @@ class BucketBlock():
     def __init__(self, posX, posY): 
         self.x = posX
         self.y = posY
-        self.color = (0,110,51)
+        self.color = (1,115,92)
         self.density = 10
 
     def update(self):
@@ -356,11 +365,12 @@ def game_loop(q):
 
         # remove all past hand blocks
 
-        for point in bucket.vertices:
-            if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
+        if bucket.vertices != None:
+            for point in bucket.vertices:
+                if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
 
-            if type(particle_map[point[0]][point[1]]).__name__ == "BucketBlock":
-                particle_map[point[0]][point[1]] = None                
+                if type(particle_map[point[0]][point[1]]).__name__ == "BucketBlock":
+                    particle_map[point[0]][point[1]] = None                
 
     root.mainloop()
 
