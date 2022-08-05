@@ -59,7 +59,7 @@ def resolve_forces(point, block_type, fx, fy):
             x += fx
             y += fy
             
-    particle_map[x][y] = SandBlock(x, y) if block_type == "SandBlock" else WaterBlock(x, y)
+    particle_map[x][y] = SandBlock(x, y)
 
 class UserInput():
     def __init__(self):
@@ -139,7 +139,7 @@ class Bucket():
 
             new_angle = round(math.atan2(dy, dx), 1)
 
-            if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 ):
+            if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1):
                 self.angle = new_angle
 
             buffer = 1/10
@@ -171,13 +171,13 @@ class Bucket():
             line = []
             line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
 
-            self.vertices = line
+            new_vertices = line
 
-            for index, point in enumerate(self.vertices):
+            for index, point in enumerate(new_vertices):
                 if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
                 block_type = type(particle_map[point[0]][point[1]]).__name__
 
-                if (block_type != "StoneBlock"):
+                if (block_type != "StoneBlock" and block_type != "BucketBlock" and block_type != None):
                     fx = 0
                     fy = 0
 
@@ -188,14 +188,26 @@ class Bucket():
 
                     resolve_forces(point, block_type, sign(dx), 0)
 
-                new_block = StoneBlock(point[0], point[1])
-                particle_map[point[0]][point[1]] = new_block
+                    new_block = BucketBlock(point[0], point[1])
+                    particle_map[point[0]][point[1]] = new_block
+            
+            self.vertices = new_vertices
 
 class StoneBlock():
     def __init__(self, posX, posY): 
         self.x = posX
         self.y = posY
         self.color = (167,173,186)
+        self.density = 10
+
+    def update(self):
+        pass
+
+class BucketBlock():
+    def __init__(self, posX, posY): 
+        self.x = posX
+        self.y = posY
+        self.color = (0,110,51)
         self.density = 10
 
     def update(self):
@@ -347,7 +359,7 @@ def game_loop(q):
         for point in bucket.vertices:
             if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
 
-            if type(particle_map[point[0]][point[1]]).__name__ == "StoneBlock":
+            if type(particle_map[point[0]][point[1]]).__name__ == "BucketBlock":
                 particle_map[point[0]][point[1]] = None                
 
     root.mainloop()
