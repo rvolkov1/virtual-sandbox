@@ -176,7 +176,6 @@ class Bucket():
             for index, point in enumerate(self.vertices):
                 if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
                 block_type = type(particle_map[point[0]][point[1]]).__name__
-                print(block_type)
 
                 if (block_type != "StoneBlock"):
                     fx = 0
@@ -209,24 +208,34 @@ class SandBlock():
         self.color = (194, 178, 128)
         self.density = 1
        
+    def update_tilemap(self, dx, dy):
+        if (particle_map[self.x + dx][self.y + dy] == None):
+            particle_map[self.x][self.y] = None
+            self.x += dx
+            self.y += dy
+            particle_map[self.x][self.y] = self
+            return (self.x, self.y)
+        else:
+            other_block = particle_map[self.x + dx][self.y + dy]
+            self.x += dx
+            self.y += dy
+            particle_map[self.x - dx][self.y - dy] = other_block
+            other_block.x = self.x - dx
+            other_block.y = self.y - dy
+            particle_map[self.x][self.y] = self
+            return (self.x, self.y)
+
+
     def update(self):
         if ((self.y + 1) * PARTICLE_SIZE >= CANVAS_HEIGHT):
             return
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and particle_map[self.x][self.y + 1] == None):
-            particle_map[self.x][self.y] = None
-            self.y += 1
-            particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y + 1] == None and particle_map[self.x + 1][self.y] == None):
-            particle_map[self.x][self.y] = None
-            self.y += 1
-            self.x += 1
-            particle_map[self.x][self.y] = self
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y + 1] == None and particle_map[self.x - 1][self.y] == None):
-            particle_map[self.x][self.y] = None
-            self.y += 1
-            self.x -= 1
-            particle_map[self.x][self.y] = self
-
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and (particle_map[self.x][self.y + 1] == None or particle_map[self.x][self.y + 1].density < self.density)):
+            return self.update_tilemap(0, 1)
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and particle_map[self.x + 1][self.y] == None and (particle_map[self.x + 1][self.y + 1] == None or particle_map[self.x + 1][self.y + 1].density < self.density)):
+            return self.update_tilemap(1, 1)
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and particle_map[self.x - 1][self.y] == None and (particle_map[self.x - 1][self.y + 1] == None or particle_map[self.x - 1][self.y + 1].density < self.density)):
+            return self.update_tilemap(-1, 1)
+        
         return (self.x, self.y)
 
 
@@ -239,43 +248,48 @@ class WaterBlock():
         self.friction = 8
         self.color = (156, 211, 219)
 
-    def update(self):
-        if (self.y < GRID_HEIGHT-1 and particle_map[self.x][self.y + 1] == None):
+    def update_tilemap(self, dx, dy):
+        if (particle_map[self.x + dx][self.y + dy] == None):
             particle_map[self.x][self.y] = None
-            self.y += 1
+            self.x += dx
+            self.y += dy
             particle_map[self.x][self.y] = self
             return (self.x, self.y)
+        else:
+            other_block = particle_map[self.x + dx][self.y + dy]
+            self.x += dx
+            self.y += dy
+            particle_map[self.x - dx][self.y - dy] = other_block
+            other_block.x = self.x - dx
+            other_block.y = self.y - dy
+            particle_map[self.x][self.y] = self
+            return (self.x, self.y)
+
+
+    def update(self):
+        if (self.y < GRID_HEIGHT-1 and particle_map[self.x][self.y + 1] == None):
+            return self.update_tilemap(0, 1)
         elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1):
             for i in range(1, self.friction + 1):
                 if (self.x + i < GRID_WIDTH - 1 and self.y < GRID_HEIGHT-1 and particle_map[self.x + i][self.y] != None):
                     break
                 if (self.x + i < GRID_WIDTH-1 and self.y + 1 < GRID_HEIGHT-1 and particle_map[self.x + i][self.y + 1] == None):
-                    particle_map[self.x][self.y] = None
-                    self.y += 1
-                    self.x += i
-                    particle_map[self.x][self.y] = self
-                    return (self.x, self.y)
+                    return self.update_tilemap(i, 1)
             
             for i in range(1, self.friction+1):
                 if (self.x - i > 0 and self.y < GRID_HEIGHT-1 and particle_map[self.x - i][self.y] != None):
                     break
                 elif (self.x - i > 0 and self.y + 1 < GRID_HEIGHT-1 and particle_map[self.x - i][self.y + 1] == None):
-                    particle_map[self.x][self.y] = None
-                    self.y += 1
-                    self.x -= i
-                    particle_map[self.x][self.y] = self
-                    return (self.x, self.y)
+                    return self.update_tilemap(-i, 1)
         
         if (self.dx == 0):
             self.dx = -1
             # self.dx = 1 if random.random() > 0.5 else -1
         elif (self.x + self.dx < GRID_WIDTH-1 and self.x + self.dx > 0 and particle_map[self.x + self.dx][self.y] == None):
-            particle_map[self.x][self.y] = None
-            self.x += self.dx
-            particle_map[self.x][self.y] = self
-        else: self.dx *= -1
-
-        return (self.x, self.y)
+            return self.update_tilemap(self.dx, 0)
+        else: 
+            self.dx *= -1
+            return (self.x, self.y)
 
 def game_loop(q):
     pygame.init()
