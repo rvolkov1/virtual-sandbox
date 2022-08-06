@@ -43,10 +43,12 @@ def resolve_forces(point, block_type, fx, fy):
     x = point[0]
     y = point[1]
 
-    if (block_type != "SandBlock"): print(block_type)
+    fy = 0
 
     x += fx
     y += fy
+
+
 
     # while (particle_map[x][y] != None):
     #     if (x + fx <= 0 or x + fx >= GRID_WIDTH):
@@ -143,13 +145,14 @@ class Bucket():
 
             new_angle = round(math.atan2(dy, dx), 1)
 
-            if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1):
-                self.angle = new_angle
-
             buffer = 1/10
 
             new_x = GRID_WIDTH - round(((pinky_x + index_x) - buffer) * GRID_WIDTH)
             new_y = round(((pinky_y + index_y)- buffer) * GRID_HEIGHT)
+
+            if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 and new_x > 0 and new_x < GRID_WIDTH - 1 and new_y > 0 and new_y < GRID_HEIGHT - 1):
+                self.angle = new_angle
+
 
             if new_x <= 0: 
                 new_x = 1
@@ -168,48 +171,53 @@ class Bucket():
 
             if(abs((new_y - self.center[1]) / self.center[1]) > 0.05):
                 self.center = (self.center[0], new_y)
+        else:
+            old_point = self.center
+            new_x = self.center[0]
+            new_y = self.center[1]
+
+        vertex_1, vertex_2, vertex_3, vertex_4 = self.get_vertices()
+
+        line = []
+        line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
+
+        new_vertices = line[:29]
 
 
-            vertex_1, vertex_2, vertex_3, vertex_4 = self.get_vertices()
+        for index, endpoint in enumerate(new_vertices):
+            if (self.vertices != None):
+                startpoint = self.vertices[index]
+                point_line = get_line_points(endpoint, startpoint)
+            else:
+                point_line = [endpoint]
 
-            line = []
-            line += get_line_points(vertex_1, vertex_2) + get_line_points(vertex_2, vertex_3) + get_line_points(vertex_3, vertex_4)
+            for i, point in enumerate(point_line):
+                if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
+                block_type = type(particle_map[point[0]][point[1]]).__name__
 
-            new_vertices = line[:29]
+                if (block_type != "StoneBlock" and block_type != "BucketBlock" and block_type != "NoneType"):
+                    fx = 0
+                    fy = 0
 
+                    dx = new_x - old_point[0]
+                    dy = new_y - old_point[1]
 
-            for index, endpoint in enumerate(new_vertices):
-                if (self.vertices != None):
-                    startpoint = self.vertices[index]
-                    point_line = get_line_points(endpoint, startpoint)
-                else:
-                    point_line = [endpoint]
+                    # print(dx, dy)
 
-                for i, point in enumerate(point_line):
-                    if (point[0] < 0 or point[0] > GRID_WIDTH-1 or point[1] < 0 or point[1] > GRID_HEIGHT -1): continue
-                    block_type = type(particle_map[point[0]][point[1]]).__name__
+                    sign = lambda x: x and (1, -1)[x<0]
 
-                    if (block_type != "StoneBlock" and block_type != "BucketBlock" and block_type != "NoneType"):
-                        fx = 0
-                        fy = 0
+                    if (i != 0): 
+                        # particle_map[point[0]][point[1]] = None
+                        pass
 
-                        dx = new_x - old_point[0]
-                        dy = new_y - old_point[1]
+                    resolve_forces(point, block_type, dx, dy)
 
-                        # print(dx, dy)
-
-                        sign = lambda x: x and (1, -1)[x<0]
-
-                        resolve_forces(point, block_type, dx, dy)
-
-                    
-                    if (i == 0):
-                        new_block = BucketBlock(point[0], point[1])
-                        particle_map[point[0]][point[1]] = new_block
-                    else:
-                        particle_map[point[0]][point[1]] = None
-            
-            self.vertices = new_vertices
+                
+                if (i == 0):
+                    new_block = BucketBlock(point[0], point[1])
+                    particle_map[point[0]][point[1]] = new_block                        
+        
+        self.vertices = new_vertices
 
 class StoneBlock():
     def __init__(self, posX, posY): 
