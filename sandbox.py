@@ -48,8 +48,6 @@ def resolve_forces(point, block_type, fx, fy):
     x += fx
     y += fy
 
-
-
     # while (particle_map[x][y] != None):
     #     if (x + fx <= 0 or x + fx >= GRID_WIDTH):
     #         if (y > 1):
@@ -150,9 +148,9 @@ class Bucket():
             new_x = GRID_WIDTH - round(((pinky_x + index_x) - buffer) * GRID_WIDTH)
             new_y = round(((pinky_y + index_y)- buffer) * GRID_HEIGHT)
 
+            # don't change if hand is outside of bounds
             if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 and new_x > 0 and new_x < GRID_WIDTH - 1 and new_y > 0 and new_y < GRID_HEIGHT - 1):
                 self.angle = new_angle
-
 
             if new_x <= 0: 
                 new_x = 1
@@ -393,9 +391,6 @@ def game_loop(q):
 
                 if type(particle_map[point[0]][point[1]]).__name__ == "BucketBlock":
                     particle_map[point[0]][point[1]] = None                
-
-    root.mainloop()
-
 
 # def draw_hands(results):
 #     for hand_no, hand_landmarks in enumerate(results):
