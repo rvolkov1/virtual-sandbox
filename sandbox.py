@@ -43,20 +43,25 @@ def resolve_forces(point, block_type, fx, fy):
     x = point[0]
     y = point[1]
 
-    while (particle_map[x][y] != None):
-        if (x + fx <= 0 or x + fx >= GRID_WIDTH):
-            if (y > 1):
-                y -= 1
-            else:
-                y += 1
-        elif (y + fy >= GRID_HEIGHT or y + fy <= 0):
-            if (x > 1):
-                x -= 1
-            else:
-                x += 1
-        else:
-            x += fx
-            y += fy
+    if (block_type != "SandBlock"): print(block_type)
+
+    x += fx
+    y += fy
+
+    # while (particle_map[x][y] != None):
+    #     if (x + fx <= 0 or x + fx >= GRID_WIDTH):
+    #         if (y > 1):
+    #             y -= 1
+    #         else:
+    #             y += 1
+    #     elif (y + fy >= GRID_HEIGHT or y + fy <= 0):
+    #         if (x > 1):
+    #             x -= 1
+    #         else:
+    #             x += 1
+    #     else:
+    #         x += fx
+    #         y += fy
             
     particle_map[x][y] = SandBlock(x, y)
 
@@ -191,14 +196,18 @@ class Bucket():
                         dx = new_x - old_point[0]
                         dy = new_y - old_point[1]
 
+                        # print(dx, dy)
+
                         sign = lambda x: x and (1, -1)[x<0]
 
-                        resolve_forces(point, block_type, sign(dx), 0)
+                        resolve_forces(point, block_type, dx, dy)
 
                     
                     if (i == 0):
                         new_block = BucketBlock(point[0], point[1])
                         particle_map[point[0]][point[1]] = new_block
+                    else:
+                        particle_map[point[0]][point[1]] = None
             
             self.vertices = new_vertices
 
@@ -316,6 +325,7 @@ def game_loop(q):
     pygame.init()
     WINDOW = pygame.display.set_mode((CANVAS_WIDTH, CANVAS_HEIGHT))
     pygame.display.set_caption("sandbox")
+    font = pygame.font.SysFont("Arial", 18)
     clock = pygame.time.Clock()
 
     player_input = UserInput()
@@ -336,14 +346,18 @@ def game_loop(q):
                     updated_tiles[updated_tile] = True
 
         scaled_surface = pygame.transform.scale(surface, (CANVAS_WIDTH, CANVAS_HEIGHT))
+        scaled_surface.blit(update_fps(), (10,0))
         WINDOW.blit(scaled_surface, (0, 0))
+
         pygame.display.flip()
 
     def update_fps():
         fps = str(int(clock.get_fps()))
+        fps_text = font.render(fps, 1, pygame.Color("coral"))
+        return fps_text
 
     while True:
-        clock.tick(60)
+        clock.tick(1000)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit(); sys.exit();
