@@ -53,6 +53,9 @@ class TileMap():
             for column, tile in enumerate(array):
                 if tile != None: 
                     new_point = tile.get_move(self.map)
+                    
+                    # if immovable object
+                    if new_point == None: continue
                     self.moves.append(((row, column), new_point),)
 
         # sort moves list by destination; shuffle results

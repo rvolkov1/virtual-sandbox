@@ -12,8 +12,8 @@ class StoneBlock():
         self.color = (167,173,186)
         self.density = 10
 
-    def update(self):
-        pass
+    def get_move(self, tilemap):
+        return None
 
 class BucketBlock():
     def __init__(self, posX, posY): 
@@ -22,8 +22,8 @@ class BucketBlock():
         self.color = (1,115,92)
         self.density = 10
 
-    def update(self):
-        pass
+    def get_move(self, tilemap):
+        return None
 
 class SandBlock():
     def __init__(self, posX, posY):
@@ -92,32 +92,32 @@ class WaterBlock():
     #         tilemap[self.x][self.y] = self
     #         return (self.x, self.y)
 
+    def update_position(self, point):
+        self.x = point[0]
+        self.y = point[1]
 
-    def update(self):
-        if (self.fx != 0 or self.fy != 0):
-            resolve_forces((self.x, self.y), "bruh", self.fx, self.fy)
-            self.fx = self.fy = 0
-
+    def get_move(self, tilemap):
         if (self.y < GRID_HEIGHT-1 and tilemap[self.x][self.y + 1] == None):
-            return self.update_tilemap(0, 1)
+            return (self.x, self.y + 1)
         elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1):
             for i in range(1, self.friction + 1):
                 if (self.x + i < GRID_WIDTH - 1 and self.y < GRID_HEIGHT-1 and tilemap[self.x + i][self.y] != None):
                     break
                 if (self.x + i < GRID_WIDTH-1 and self.y + 1 < GRID_HEIGHT-1 and tilemap[self.x + i][self.y + 1] == None):
-                    return self.update_tilemap(i, 1)
+                    return (self.x + i, self.y + 1)
             
             for i in range(1, self.friction+1):
                 if (self.x - i > 0 and self.y < GRID_HEIGHT-1 and tilemap[self.x - i][self.y] != None):
                     break
                 elif (self.x - i > 0 and self.y + 1 < GRID_HEIGHT-1 and tilemap[self.x - i][self.y + 1] == None):
-                    return self.update_tilemap(-i, 1)
+                    return (self.x - i, self.y + 1)
         
         if (self.dx == 0):
             self.dx = -1
+            return (self.x, self.y)
             # self.dx = 1 if random.random() > 0.5 else -1
         elif (self.x + self.dx < GRID_WIDTH-1 and self.x + self.dx > 0 and tilemap[self.x + self.dx][self.y] == None):
-            return self.update_tilemap(self.dx, 0)
+            return (self.x + self.dx, self.y)
         else: 
             self.dx *= -1
             return (self.x, self.y)
