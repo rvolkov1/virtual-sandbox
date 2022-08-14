@@ -23,8 +23,8 @@ class Bucket():
         bot_left = (round(self.center[0] - b), round(self.center[1] + a))
         bot_right = (round(self.center[0] + b), round(self.center[1] - a))
 
-        top_left = (bot_left[0] - self.side_length * math.sin(self.angle), bot_left[1] - self.side_length * math.cos(self.angle))
-        top_right = (bot_right[0] - self.side_length * math.sin(self.angle), bot_right[1] - self.side_length * math.cos(self.angle))
+        top_left = (round(bot_left[0] - self.side_length * math.sin(self.angle)), round(bot_left[1] - self.side_length * math.cos(self.angle)))
+        top_right = (round(bot_right[0] - self.side_length * math.sin(self.angle)), round(bot_right[1] - self.side_length * math.cos(self.angle)))
 
         return (top_left, bot_left, bot_right, top_right)
 

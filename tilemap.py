@@ -1,5 +1,4 @@
 import math
-import random
 from blocks import BucketBlock, SandBlock, WaterBlock, StoneBlock
 
 class TileMap():
@@ -16,9 +15,24 @@ class TileMap():
         # calculate possible changes for blocks
         # update blocks
 
-        moved_tiles = self.get_moved_tiles(old_bucket_vertices, new_bucket_vertices)
+        if (new_bucket_vertices):
+            new_bucket_tiles = self.get_line_points(new_bucket_vertices[0], new_bucket_vertices[1]) + self.get_line_points(new_bucket_vertices[1], new_bucket_vertices[2]) + self.get_line_points(new_bucket_vertices[2], new_bucket_vertices[3])
+        else:
+            new_bucket_tiles = None
+        
+        if (old_bucket_vertices):
+            old_bucket_tiles = self.get_line_points(old_bucket_vertices[0], old_bucket_vertices[1]) + self.get_line_points(old_bucket_vertices[1], old_bucket_vertices[2]) + self.get_line_points(old_bucket_vertices[2], old_bucket_vertices[3])
 
-        if (old_bucket_vertices != None):
+            # remove old bucket tiles from map
+            for tile in old_bucket_tiles:
+                if not self.point_in_bounds(tile): continue
+                self.map[tile[0]][tile[1]] = None
+        else:
+            old_bucket_tiles = None
+
+        moved_tiles = self.get_moved_tiles(old_bucket_tiles, new_bucket_tiles)
+
+        if (old_bucket_vertices != None and new_bucket_vertices != None):
             fx, fy = self.get_point_change(old_bucket_vertices[0], new_bucket_vertices[0])
         else:
             fx, fy = 0, 0
@@ -26,11 +40,12 @@ class TileMap():
         # apply forces to tiles moved by bucket
         if moved_tiles:
             for point in moved_tiles:
-                self.resolve_forces(point, "bruh", fx, fy)
+                self.resolve_forces(point, fx, fy)
         
-        if (new_bucket_vertices):
+        if (new_bucket_tiles):
             # add bucket blocks to tilemap
-            for point in new_bucket_vertices:
+            for point in new_bucket_tiles:
+                if (not self.point_in_bounds(point)): continue
                 self.map[point[0]][point[1]] = BucketBlock(point[0], point[1])
 
         if (mouse_pos != None):
@@ -88,6 +103,9 @@ class TileMap():
                     old_tile.update_position((new_point[0], new_point[1]))
                     less_dense_block.update_position((new_point[0], new_point[1] - 1))
 
+    def point_in_bounds(self, point):
+        return point[0] >= 0 and point[0] < self.width and point[1] >= 0 and point[1] < self.height
+
     @staticmethod
     def get_line_points(naught, final):
         # 20, 20, 20, 10
@@ -116,19 +134,20 @@ class TileMap():
         fy = final[1] - naught[1]
         return fx, fy
 
-    def get_moved_tiles(self, old_bucket_vertices, new_bucket_vertices):
-        if new_bucket_vertices == None: return
+    def get_moved_tiles(self, old_bucket_tiles, new_bucket_tiles):
+        if new_bucket_tiles == None: return
 
         moved_tiles = []
 
-        for i in range(len(new_bucket_vertices)):
-            if old_bucket_vertices == None:
-                line = new_bucket_vertices
+        # bucket tiles can be between 27 and 28 tiles for some reason
+        for i in range(28):
+            if old_bucket_tiles == None:
+                line = new_bucket_tiles
             else:
-                line = self.get_line_points(old_bucket_vertices[i], new_bucket_vertices[i])
+                line = self.get_line_points(old_bucket_tiles[i], new_bucket_tiles[i])
 
             for point in line:
-                if (self.map[point[0]][point[1]] != None): 
+                if (self.point_in_bounds(point) and self.map[point[0]][point[1]] != None): 
                     moved_tiles.append(point)
         
         return moved_tiles
@@ -136,7 +155,7 @@ class TileMap():
     def add_new_block(self, mouse_pos, block_type):
         pass
 
-    def resolve_forces(point, block_type, fx, fy):
+    def resolve_forces(self, point, fx, fy):
         if (fx == fy == 0): return
         x = point[0]
         y = point[1]
