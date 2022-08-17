@@ -45,12 +45,13 @@ class TileMap():
         else:
             fx, fy = 0, 0
 
+        print("after calculating fx", self.count_tiles())
+
         # apply forces to tiles moved by bucket
         if moved_tiles:
             for point in moved_tiles:
-                print(point)
+                if fy == fx == 0: continue
                 new_point = self.resolve_forces(point, fx, fy, new_bucket_tiles)
-                print(new_point)
 
                 self.map[new_point[0]][new_point[1]] = self.map[point[0]][point[1]]
 
