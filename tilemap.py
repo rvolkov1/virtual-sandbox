@@ -20,11 +20,14 @@ class TileMap():
 
         if (new_bucket_vertices):
             new_bucket_tiles = self.get_line_points(new_bucket_vertices[0], new_bucket_vertices[1]) + self.get_line_points(new_bucket_vertices[1], new_bucket_vertices[2]) + self.get_line_points(new_bucket_vertices[2], new_bucket_vertices[3])
+            new_bucket_tiles = new_bucket_tiles[:29]
         else:
             new_bucket_tiles = None
         
         if (old_bucket_vertices):
             old_bucket_tiles = self.get_line_points(old_bucket_vertices[0], old_bucket_vertices[1]) + self.get_line_points(old_bucket_vertices[1], old_bucket_vertices[2]) + self.get_line_points(old_bucket_vertices[2], old_bucket_vertices[3])
+
+            old_bucket_tiles = old_bucket_tiles[:29]
 
             # remove old bucket tiles from map
             for tile in old_bucket_tiles:
