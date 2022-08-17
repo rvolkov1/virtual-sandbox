@@ -15,6 +15,9 @@ class StoneBlock():
     def get_move(self, tilemap):
         return None
 
+    def update_position(self, tilemap):
+        pass
+
 class BucketBlock():
     def __init__(self, posX, posY): 
         self.x = posX

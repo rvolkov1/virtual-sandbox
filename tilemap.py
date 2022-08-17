@@ -1,4 +1,5 @@
 import math
+from types import new_class
 from blocks import BucketBlock, SandBlock, WaterBlock, StoneBlock
 
 class TileMap():
@@ -15,6 +16,8 @@ class TileMap():
         # calculate possible changes for blocks
         # update blocks
 
+        print("at top of update", self.count_tiles())
+
         if (new_bucket_vertices):
             new_bucket_tiles = self.get_line_points(new_bucket_vertices[0], new_bucket_vertices[1]) + self.get_line_points(new_bucket_vertices[1], new_bucket_vertices[2]) + self.get_line_points(new_bucket_vertices[2], new_bucket_vertices[3])
         else:
@@ -30,9 +33,12 @@ class TileMap():
         else:
             old_bucket_tiles = None
 
+        print("after calculating bucket tiles", self.count_tiles())
+
         moved_tiles = self.get_moved_tiles(old_bucket_tiles, new_bucket_tiles)
 
         if (old_bucket_vertices != None and new_bucket_vertices != None):
+            # need to also get point change for changes in angles
             fx, fy = self.get_point_change(old_bucket_vertices[0], new_bucket_vertices[0])
         else:
             fx, fy = 0, 0
@@ -40,13 +46,29 @@ class TileMap():
         # apply forces to tiles moved by bucket
         if moved_tiles:
             for point in moved_tiles:
-                self.resolve_forces(point, fx, fy)
+                new_point = self.resolve_forces(point, fx, fy, new_bucket_tiles)
+
+                self.map[new_point[0]][new_point[1]] = self.map[point[0]][point[1]]
+
+                self.map[new_point[0]][new_point[1]].update_position(new_point)
+                self.map[point[0]][point[1]] = None
         
+        print('after resolving forces', self.count_tiles())
+
         if (new_bucket_tiles):
             # add bucket blocks to tilemap
             for point in new_bucket_tiles:
                 if (not self.point_in_bounds(point)): continue
+
+                # sand is being deleted by bucket
+                if self.map[point[0]][point[1]] != None: 
+                    # print(self.map[point[0]][point[1]]) 
+                    continue
+                # print(self.map[point[0]][point[1]]) 
+
                 self.map[point[0]][point[1]] = BucketBlock(point[0], point[1])
+
+        print('after bucket block', self.count_tiles())
 
         if (mouse_pos != None):
             line_points = [mouse_pos[1]] if mouse_pos[0] == None else self.get_line_points(mouse_pos[0], mouse_pos[1])
@@ -102,6 +124,8 @@ class TileMap():
                     
                     old_tile.update_position((new_point[0], new_point[1]))
                     less_dense_block.update_position((new_point[0], new_point[1] - 1))
+        print("after moving everything", self.count_tiles())
+
 
     def point_in_bounds(self, point):
         return point[0] >= 0 and point[0] < self.width and point[1] >= 0 and point[1] < self.height
@@ -147,7 +171,7 @@ class TileMap():
                 line = self.get_line_points(old_bucket_tiles[i], new_bucket_tiles[i])
 
             for point in line:
-                if (self.point_in_bounds(point) and self.map[point[0]][point[1]] != None): 
+                if (self.point_in_bounds(point) and self.map[point[0]][point[1]] != None and point not in moved_tiles): 
                     moved_tiles.append(point)
         
         return moved_tiles
@@ -155,29 +179,52 @@ class TileMap():
     def add_new_block(self, mouse_pos, block_type):
         pass
 
-    def resolve_forces(self, point, fx, fy):
+    def resolve_forces(self, point, fx, fy, new_bucket_tiles):
         if (fx == fy == 0): return
         x = point[0]
         y = point[1]
 
-        x += fx + 1 if fx > 0 else fx - 1
-        y += fy + 1 if fy > 0 else fy - 1
+        sign = lambda x: x and (1, -1)[x<0]
 
-        # while (particle_map[x][y] != None):
-        #     if (x + fx <= 0 or x + fx >= GRID_WIDTH):
-        #         if (y > 1):
-        #             y -= 1
-        #         else:
-        #             y += 1
-        #     elif (y + fy >= GRID_HEIGHT or y + fy <= 0):
-        #         if (x > 1):
-        #             x -= 1
-        #         else:
-        #             x += 1
-        #     else:
-        #         x += fx
-        #         y += fy
+        dx = sign(fx)
+        dy = sign(fy)
 
+        if (x + fx + dx > 0 and x + fx + dx < self.width - 1):
+            x += fx + dx
+
+        if (y + fy + dy > 0 and y + fy + dy < self.height - 1):
+            y += fy + dy
+
+        while (self.map[x][y] != None or (x,y) in new_bucket_tiles):
+
+            # literally just move it up
+            # if (self.point_in_bounds(x + dx, y)):
+            #     x += dx
+            if (y > 2):
+                y -= 1
+
+            # if (x + fx <= 0 or x + fx >= self.width):
+            #     if (y > 1):
+            #         y -= 1
+            #     else:
+            #         y += 1
+            # elif (y + fy >= self.height or y + fy <= 0):
+            #     if (x > 1):
+            #         x -= 1
+            #     else:
+            #         x += 1
+            # else:
+            #     x += dx
+            #     y += dy
+
+        # print((x,y) in new_bucket_tiles)
         return(x,y)
-                
-        self.particle_map[x][y] = SandBlock(x, y)
+
+    def count_tiles(self):
+        count = 0
+        for array in self.map:
+            for tile in array:
+                if (tile != None):
+                    count += 1
+        
+        return count
