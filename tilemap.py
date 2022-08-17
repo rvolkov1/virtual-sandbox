@@ -20,19 +20,18 @@ class TileMap():
 
         if (new_bucket_vertices):
             new_bucket_tiles = self.get_line_points(new_bucket_vertices[0], new_bucket_vertices[1]) + self.get_line_points(new_bucket_vertices[1], new_bucket_vertices[2]) + self.get_line_points(new_bucket_vertices[2], new_bucket_vertices[3])
-            new_bucket_tiles = new_bucket_tiles[:29]
         else:
             new_bucket_tiles = None
         
         if (old_bucket_vertices):
             old_bucket_tiles = self.get_line_points(old_bucket_vertices[0], old_bucket_vertices[1]) + self.get_line_points(old_bucket_vertices[1], old_bucket_vertices[2]) + self.get_line_points(old_bucket_vertices[2], old_bucket_vertices[3])
 
-            old_bucket_tiles = old_bucket_tiles[:29]
-
             # remove old bucket tiles from map
-            for tile in old_bucket_tiles:
-                if not self.point_in_bounds(tile): continue
-                self.map[tile[0]][tile[1]] = None
+            for i, array in enumerate(self.map):
+                for j, tile in enumerate(array):
+                    #if not self.point_in_bounds(tile): continue
+                    if (tile != None and tile.__class__.__name__ == "BucketBlock"):
+                        self.map[i][j] = None
         else:
             old_bucket_tiles = None
 
@@ -49,7 +48,9 @@ class TileMap():
         # apply forces to tiles moved by bucket
         if moved_tiles:
             for point in moved_tiles:
+                print(point)
                 new_point = self.resolve_forces(point, fx, fy, new_bucket_tiles)
+                print(new_point)
 
                 self.map[new_point[0]][new_point[1]] = self.map[point[0]][point[1]]
 
@@ -128,7 +129,7 @@ class TileMap():
                     old_tile.update_position((new_point[0], new_point[1]))
                     less_dense_block.update_position((new_point[0], new_point[1] - 1))
         print("after moving everything", self.count_tiles())
-
+        print("--------------------------------------")
 
     def point_in_bounds(self, point):
         return point[0] >= 0 and point[0] < self.width and point[1] >= 0 and point[1] < self.height
@@ -183,7 +184,7 @@ class TileMap():
         pass
 
     def resolve_forces(self, point, fx, fy, new_bucket_tiles):
-        if (fx == fy == 0): return
+        if (fx == fy == 0): return point
         x = point[0]
         y = point[1]
 
@@ -219,7 +220,6 @@ class TileMap():
             # else:
             #     x += dx
             #     y += dy
-
         # print((x,y) in new_bucket_tiles)
         return(x,y)
 
@@ -227,7 +227,7 @@ class TileMap():
         count = 0
         for array in self.map:
             for tile in array:
-                if (tile != None):
+                if (tile != None and tile.__class__.__name__ != "BucketBlock"):
                     count += 1
         
         return count
