@@ -200,11 +200,15 @@ class TileMap():
         if (y + fy + dy > 0 and y + fy + dy < self.height - 1):
             y += fy + dy
 
+        loop_num = 0
+
         while (self.map[x][y] != None or (x,y) in new_bucket_tiles):
 
             # literally just move it up
             # if (self.point_in_bounds(x + dx, y)):
             #     x += dx
+
+            loop_num += 1
 
             if (x + fx <= 0 or x + fx >= self.width):
                 if (y > 1):
@@ -219,9 +223,19 @@ class TileMap():
             elif (self.point_in_bounds((x + dx, y + dy))):
                 x += dx
                 y += dy
-            else:
-                if (y > 2):
-                    y -= 1
+            elif (y > 2):
+                y -= 1
+            elif (x + 1 < self.width - 1):
+                x += 1
+            elif (x - 1 > 0):
+                x -= 1
+            elif (loop_num > 15):
+                # prevents occasional infinite loop
+                break
+            else: 
+                break
+                
+                
         # print((x,y) in new_bucket_tiles)
         return(x,y)
 
