@@ -56,6 +56,9 @@ class Bucket():
             if (self.angle == 0 or abs((new_angle - self.angle) / self.angle) > 0.1 and new_x > 0 and new_x < GRID_WIDTH - 1 and new_y > 0 and new_y < GRID_HEIGHT - 1):
                 self.angle = new_angle
 
+            # patchhhh
+            self.angle = 0
+
             if new_x <= 0: 
                 new_x = 1
             elif new_x > GRID_WIDTH:
