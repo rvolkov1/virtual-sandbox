@@ -125,12 +125,26 @@ class TileMap():
                     # density physics
                     less_dense_block = self.map[new_point[0]][new_point[1]]
                     self.map[new_point[0]][new_point[1]] = old_tile
-                    self.map[new_point[0]][new_point[1] - 1] = less_dense_block
+
+                    i = 1
+
+                    # while (new_point[1] - i > 0 and self.map[new_point[0]][new_point[1] - i] != None):
+                    #     i += 1
+
+                    self.map[old_point[0]][old_point[1]] = less_dense_block
                     
                     old_tile.update_position((new_point[0], new_point[1]))
-                    less_dense_block.update_position((new_point[0], new_point[1] - 1))
+                    less_dense_block.update_position((new_point[0], new_point[1] - i))
         print("after moving everything", self.count_tiles())
         print("--------------------------------------")
+
+    def clear(self):
+        print("clear")
+        # for array in self.map:
+        #     for tile in array:
+        #         print(tile)
+        #         tile = None
+        self.map = [[None for i in range(self.height)] for j in range(self.width)]
 
     def point_in_bounds(self, point):
         return point[0] >= 0 and point[0] < self.width and point[1] >= 0 and point[1] < self.height
@@ -210,7 +224,10 @@ class TileMap():
 
             loop_num += 1
 
-            if (x + fx <= 0 or x + fx >= self.width):
+            if (loop_num > 10000):
+                # prevents occasional infinite loop
+                break
+            elif (x + fx <= 0 or x + fx >= self.width):
                 if (y > 1):
                     y -= 1
                 else:
@@ -229,9 +246,6 @@ class TileMap():
                 x += 1
             elif (x - 1 > 0):
                 x -= 1
-            elif (loop_num > 15):
-                # prevents occasional infinite loop
-                break
             else: 
                 break
                 

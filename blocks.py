@@ -61,9 +61,9 @@ class SandBlock():
             return (self.x, self.y)
         elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and (tilemap[self.x][self.y + 1] == None or tilemap[self.x][self.y + 1].density < self.density)):
             return (self.x, self.y + 1)
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and tilemap[self.x + 1][self.y] == None and (tilemap[self.x + 1][self.y + 1] == None or tilemap[self.x + 1][self.y + 1].density < self.density)):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x < CANVAS_WIDTH/PARTICLE_SIZE-1 and (tilemap[self.x + 1][self.y] == None or tilemap[self.x + 1][self.y].density < self.density) and (tilemap[self.x + 1][self.y + 1] == None or tilemap[self.x + 1][self.y + 1].density < self.density)):
             return (self.x + 1, self.y + 1)
-        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and tilemap[self.x - 1][self.y] == None and (tilemap[self.x - 1][self.y + 1] == None or tilemap[self.x - 1][self.y + 1].density < self.density)):
+        elif (self.y < CANVAS_HEIGHT/PARTICLE_SIZE-1 and self.x > 0 and (tilemap[self.x - 1][self.y] == None or tilemap[self.x - 1][self.y].density < self.density) and (tilemap[self.x - 1][self.y + 1] == None or tilemap[self.x - 1][self.y + 1].density < self.density)):
             return (self.x - 1, self.y + 1)
         
         return (self.x, self.y)

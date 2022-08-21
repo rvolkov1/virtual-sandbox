@@ -105,6 +105,8 @@ def game_loop(q):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if pygame.key.get_pressed()[pygame.K_c]:
+                tilemap.clear()
 
         try:
             # get most recent hand position
@@ -120,14 +122,12 @@ def game_loop(q):
         mouse_pos = player_input.get_mouse_pos()
         
         old_bucket_vertices, new_bucket_vertices = bucket.get_vertices(results, tilemap.width, tilemap.height)
-
         tilemap.update(mouse_pos, block_to_be_drawn, old_bucket_vertices, new_bucket_vertices)
 
         render()
         update_fps()
 
         # remove all past hand blocks
-
         if bucket.vertices != None:
             for point in bucket.vertices:
                 if (point[0] < 0 or point[0] > tilemap.width - 1 or point[1] < 0 or point[1] > tilemap.height - 1): continue
