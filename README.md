@@ -1,8 +1,10 @@
 # Virtual-Sandbox
 
-### Simple, interactive particle simulation
+## Simple, interactive particle simulation
 
 Three types of tiles: sand, water and stone.
+
+![Sand](./Assets/Sandgif1.gif)
 
 Build environments with unique tiles
 
