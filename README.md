@@ -4,7 +4,9 @@
 
 Three types of tiles: sand, water and stone.
 
-![Sand](./Assets/Sandgif1.gif) ![Water](./Assets/Watergif1.gif)
+![Sand](./Assets/Sandgif1.gif) 
+
+![Water](./Assets/Watergif1.gif)
 
 Build environments with unique tiles
 
