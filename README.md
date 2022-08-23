@@ -10,4 +10,9 @@ Three types of tiles: sand, water and stone.
 
 Build environments with unique tiles
 
+Control a bucket with your webcam
+
+![Bucket-clip](./Assets/bucket-clip.gif)
+![Hand-clip](./Assets/hand-clip.gif) 
+
 Transform the landscape with motion-controlled bucket
