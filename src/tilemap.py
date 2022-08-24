@@ -208,11 +208,11 @@ class TileMap():
         dx = sign(fx)
         dy = sign(fy)
 
-        if (x + fx + dx > 0 and x + fx + dx < self.width - 1):
-            x += fx + dx
+        if (x + fx > 0 and x + fx < self.width - 1):
+            x += fx
 
-        if (y + fy + dy > 0 and y + fy + dy < self.height - 1):
-            y += fy + dy
+        if (y + fy > 0 and y + fy < self.height - 1):
+            y += fy
 
         loop_num = 0
 
