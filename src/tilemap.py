@@ -140,10 +140,6 @@ class TileMap():
 
     def clear(self):
         print("clear")
-        # for array in self.map:
-        #     for tile in array:
-        #         print(tile)
-        #         tile = None
         self.map = [[None for i in range(self.height)] for j in range(self.width)]
 
     def point_in_bounds(self, point):
@@ -217,26 +213,22 @@ class TileMap():
         loop_num = 0
 
         while (self.map[x][y] != None or (x,y) in new_bucket_tiles):
-
-            # literally just move it up
-            # if (self.point_in_bounds(x + dx, y)):
-            #     x += dx
-
             loop_num += 1
 
             if (loop_num > 10000):
                 # prevents occasional infinite loop
+                # block will be overwritten and deleted
                 break
-            elif (x + fx <= 0 or x + fx >= self.width):
-                if (y > 1):
-                    y -= 1
-                else:
-                    y += 1
-            elif (y + fy >= self.height or y + fy <= 0):
-                if (x > 1):
-                    x -= 1
-                else:
-                    x += 1
+            # elif (x + fx <= 0 or x + fx >= self.width):
+            #     if (y > 1):
+            #         y -= 1
+            #     else:
+            #         y += 1
+            # elif (y + fy >= self.height or y + fy <= 0):
+            #     if (x > 1):
+            #         x -= 1
+            #     else:
+            #         x += 1
             elif (self.point_in_bounds((x + dx, y + dy))):
                 x += dx
                 y += dy
